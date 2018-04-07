@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
+from scipy.optimize import curve_fit
+
 
 #Load data for variables from text files
 mhalo=np.loadtxt('mhalo.txt') /0.7                  #10^10 Mo/h
@@ -9,6 +11,7 @@ f_half=np.loadtxt('t50.txt')/1000.                  #f1/2
 red_half=np.loadtxt('red_half.txt')                 #Lookback time
 StellarMass=np.loadtxt('StellarMass.txt')
 StellarMassHist=np.loadtxt('StellarMassHist.txt')
+star_gas_angle=np.loadtxt('star_gas_angle')
 SfrDisk=np.loadtxt('SfrDisk.txt')                   #Mo / yr
 SfrBulge=np.loadtxt('SfrBulge.txt')
 SFR=SfrDisk+SfrBulge
@@ -31,57 +34,90 @@ for i in range(0,(len(StellarMass[class_ok])-1)):
 ###############################################################################
 
 #Log of halo mass
-log_mhalo=np.log10(mhalo)+10.
+log_halo=np.log10(mhalo)+10.
+log_mhalo=np.log10(mhalo[class_ok])+10.
 
 ###############################################################################
 
-#Use data to create the mass-weighted average
+#Use data to create the mass-weighted age
 file=np.loadtxt('Millennium-output-times.dati')
 bins=file[:,0]
 t=file[:,4]
-mwa=np.zeros(19956)     
-top=np.zeros((19956,64))
-bottom=np.zeros((19956,64))
+mwa=np.zeros(7245)              #Using 7245 due to class_ok making array smaller 
+top=np.zeros((7245,64))
+bottom=np.zeros((7245,64))
 i=0
 
 for i in range(0,(len(bins-1))):
 
-    top[:,i]=(t[i]*StellarMassHist[:,i])
-    bottom[:,i]=(StellarMassHist[:,i])
+    top[:,i]=(t[i]*StellarMassHist[class_ok][:,i])
+    bottom[:,i]=(StellarMassHist[class_ok][:,i])
 
-topsum=np.sum(top,axis=0)
-botsum=np.sum(bottom,axis=0)
+topsum=np.sum(top,axis=1)
+botsum=np.sum(bottom,axis=1)
 
-for i in range (0,(len(topsum)-1)):
-    #if botsum[i]>0:
-    mwa[i] = topsum[i]/botsum[i]
-
+mwa=(topsum/botsum)/1e3
 ###############################################################################
+'''
+#T50: the time at which the central galaxy had formed 50% of its mass
+t50=np.zeros(7245)
+m50=StellarMass[class_ok]/2
+while i<63: 
+    half=StellarMassHist[class_ok][:,i] 
+    for j in range (0,(len(half)-1)):     
+        if half[j]==m50[j]:         
+            t50[j]=red_half[j] 
+            print("ok") 
+    i=i+1 
+'''
 ###############################################################################
-
-#Plot of Mass Weighted Average vs Mhalo
-plt.scatter(log_mhalo,(mwa/1000))
-plt.title("MWA vs Mhalo")
-plt.xlabel("Mhalo (log10)")
-plt.ylabel("MWA")
-plt.ylim(-1,15)
-
+'''
+#Plot of star gas angle vs mhalo
+plt.scatter(log_halo,star_gas_angle)
+plt.title("Star gas angle vs Halo Mass")
+plt.xlabel("Halo Mass (log(M/$h^-1$ Msun))")
+plt.ylabel("Star gas angle")
+'''
 ###############################################################################
 ###############################################################################
 '''
+#Plot of t50 vs Mhalo
+plt.scatter(log_mhalo,StellarMassHist[class_ok][:,32])
+plt.title("t50 vs Halo Mass")
+plt.xlabel("Halo Mass (log(M/$h^-1$ Msun))")
+plt.ylabel("t50")
+'''
+###############################################################################
+###############################################################################
+'''
+#Plot of Mass Weighted Age vs Mhalo
+plt.scatter(log_mhalo,mwa, s=1)
+plt.title("MWA vs Halo Mass")
+plt.xlabel("Halo Mass (log(M/$h^-1$ Msun))")
+plt.ylabel("MWA (Gyr)")
+
+#Plot of Mass Weighted Average vs f half
+plt.scatter(f_half[class_ok],mwa, s=1)
+plt.title("MWA vs f 1/2")
+plt.xlabel("f 1/2 (Gyr)")
+plt.ylabel("MWA (Gyr)")
+plt.ylim(-1,10)
+'''
+###############################################################################
+###############################################################################
+
 #Plot of Mstar/Mhalo vs Mhalo
-plt.scatter(log_mhalo,((mstar/mhalo)) )
-plt.title("Mstar/Mhalo vs Mhalo")
-plt.xlabel("Mhalo (log10)")
+plt.scatter(log_mhalo,((mstar[class_ok]/mhalo[class_ok])),s=1 )
+plt.title("Mstar/Mhalo vs Halo Mass")
+plt.xlabel("Halo Mass (log(M/$h^-1$ Msun))")
 plt.ylabel("Mstar/Mhalo")
-plt.xlim((11.5,14.5))
-'''
+
 ###############################################################################
 '''
 #Plot of Mstar/Mhalo vs f 1/2
-plt.scatter(f_half,((mstar/mhalo)) )
+plt.scatter(f_half[class_ok],((mstar[class_ok]/mhalo[class_ok])),s=1 )
 plt.title("Mstar/Mhalo vs f 1/2")
-plt.xlabel("f 1/2")
+plt.xlabel("f 1/2 (Gyr)")
 plt.ylabel("Mstar/Mhalo")
 '''
 ###############################################################################
@@ -92,42 +128,42 @@ plt.ylabel("Mstar/Mhalo")
 #Hexbin plot of SFR
 fig, axs = plt.subplots(ncols=3, sharey=True)
 ax = axs[0]
-#hb = ax.hexbin(log_mhalo, SFR, gridsize=40, bins='log', cmap='inferno')
-#cb = fig.colorbar(hb, ax=ax)
-#ax.set_title("SFR vs Mhalo(log) using hexbin")
+hb = ax.hexbin(log_mhalo, SFR[class_ok], gridsize=[10,10], bins='log', cmap='inferno')
+cb = fig.colorbar(hb, ax=ax)
+ax.set_title("SFR vs Halo Mass")
 xmin=min(log_mhalo)
 xmax=max(log_mhalo)
 ymin=min(SFR)
-ymax=max(SFR)
+ymax=60#max(SFR)
 ax.axis([xmin, xmax, ymin, ymax])
 
 #Plot of SFR
 ax=axs[0]
-ax.scatter(log_mhalo, SFR )
-ax.set_title("SFR vs Mhalo(log)")
-ax.set_xlabel("Mhalo")
-ax.set_ylabel("SFR")
+ax.scatter(log_mhalo, SFR[class_ok], s=1 )
+ax.set_title("SFR vs Halo Mass")
+ax.set_xlabel("Halo Mass (log(M/$h^-1$ Msun))")
+ax.set_ylabel("SFR (Msun/yr)")
 ax.axis([xmin, xmax, ymin, ymax])
 
 #Plot of SFR in Disk
 ax=axs[1]
-ax.scatter(log_mhalo, SfrDisk )
-ax.set_title("SfrDisk vs Mhalo(log)")
-ax.set_xlabel("Mhalo")
-ax.set_ylabel("SfrDisk")
+ax.scatter(log_mhalo, SfrDisk[class_ok], s=1 )
+ax.set_title("SFR Disk vs Halo Mass")
+ax.set_xlabel("Halo Mass (log(M/$h^-1$ Msun))")
+ax.set_ylabel("SFR Disk (Msun/yr)")
 ymin=min(SfrDisk)
-ymax=max(SfrDisk)
+ymax=60#max(SfrDisk)
 ax.axis([xmin, xmax, ymin, ymax])
 
 #Plot of SFR in Bulge
 ax=axs[2]
-ax.scatter(log_mhalo, SfrBulge )
-ax.set_title("SfrBulge vs Mhalo(log)")
-ax.set_xlabel("Mhalo")
-ax.set_ylabel("SfrBulge")
+ax.scatter(log_mhalo, SfrBulge[class_ok], s=1 )
+ax.set_title("SFR Bulge vs Halo Mass")
+ax.set_xlabel("Halo Mass (log(M/$h^-1$ Msun))")
+ax.set_ylabel("SFR Bulge (Msun/yr)")
 ax.axis([xmin, xmax, ymin, ymax])
 ymin=min(SfrBulge)
-ymax=max(SfrBulge)
+ymax=60#max(SfrBulge)
 '''
 ###############################################################################
 ###############################################################################
@@ -135,37 +171,40 @@ ymax=max(SfrBulge)
 #Plotting SFR versus F 1/2
 
 #Set up subplots
-fig, axs = plt.subplots(ncols=3, sharey=True)
+fig, axs = plt.subplots(ncols=2, sharey=True)
 ax = axs[0]
+hb = ax.hexbin(f_half[class_ok], SFR[class_ok], gridsize=40, bins='log', cmap='inferno')
+ax = axs[0]
+ax.set_title("SFR vs f 1/2")
 xmin=min(f_half)
 xmax=max(f_half)
 ymin=min(SFR)
 ymax=max(SFR)
 
 #Plot of SFR
-ax=axs[0]
-ax.scatter(f_half, SFR )
+ax=axs[1]
+ax.scatter(f_half[class_ok], SFR[class_ok], s=1 )
 ax.set_title("SFR vs f 1/2")
-ax.set_xlabel("f 1/2")
-ax.set_ylabel("SFR")
+ax.set_xlabel("f 1/2 (Gyr)")
+ax.set_ylabel("SFR (Msun/yr)")
 ax.axis([xmin, xmax, ymin, ymax])
 
 #Plot of SFR in Disk
 ax=axs[1]
-ax.scatter(f_half, SfrDisk )
+ax.scatter(f_half, SfrDisk, s=1 )
 ax.set_title("SfrDisk vs f 1/2")
-ax.set_xlabel("f 1/2")
-ax.set_ylabel("SfrDisk")
+ax.set_xlabel("f 1/2 (Gyr)")
+ax.set_ylabel("SfrDisk (Msun/yr)")
 ymin=min(SfrDisk)
 ymax=max(SfrDisk)
 ax.axis([xmin, xmax, ymin, ymax])
 
 #Plot of SFR in Bulge
 ax=axs[2]
-ax.scatter(f_half, SfrBulge )
+ax.scatter(f_half, SfrBulge, s=1 )
 ax.set_title("SfrBulge vs f 1/2")
-ax.set_xlabel("f 1/2")
-ax.set_ylabel("SfrBulge")
+ax.set_xlabel("f 1/2 (Gyr)")
+ax.set_ylabel("SfrBulge (Msun/yr)")
 ymin=min(SfrBulge)
 ymax=max(SfrBulge)
 ax.axis([xmin, xmax, ymin, ymax])
@@ -178,37 +217,40 @@ ax.axis([xmin, xmax, ymin, ymax])
 #Set up subplots
 fig, axs = plt.subplots(ncols=3, sharey=True)
 ax = axs[0]
+hb = ax.hexbin(log_mhalo, sSFR[class_ok], gridsize=[15,40], bins='log',cmap='inferno')#bins='log', 
+cb = fig.colorbar(hb, ax=ax)
+ax.set_title("sSFR vs Halo Mass")
 xmin=min(log_mhalo)
 xmax=max(log_mhalo)
 ymin=min(sSFR)
-ymax=max(sSFR)
+ymax=60#max(sSFR)
 
 #Plot of sSFR
 ax=axs[0]
-ax.scatter(log_mhalo, sSFR )
-ax.set_title("sSFR vs Mhalo")
-ax.set_xlabel("Mhalo")
-ax.set_ylabel("sSFR")
+ax.scatter(log_mhalo, sSFR[class_ok],s=1 )
+ax.set_title("sSFR vs Halo Mass")
+ax.set_xlabel("Halo Mass (log(M/$h^-1$ Msun))")
+ax.set_ylabel("sSFR ($yr^-1$)")
 ax.axis([xmin, xmax, ymin, ymax])
 
 #Plot of sSFR in Disk
 ax=axs[1]
-ax.scatter(log_mhalo, sSFRDisk )
-ax.set_title("sSfrDisk vs Mhalo")
-ax.set_xlabel("Mhalo")
-ax.set_ylabel("sSfrDisk")
+ax.scatter(log_mhalo, sSFRDisk[class_ok],s=1 )
+ax.set_title("sSFR Disk vs Halo Mass")
+ax.set_xlabel("Halo Mass (log(M/$h^-1$ Msun))")
+ax.set_ylabel("sSFR Disk ($yr^-1$)")
 ymin=min(sSFRDisk)
-ymax=max(sSFRDisk)
+ymax=60#max(sSFRDisk)
 ax.axis([xmin, xmax, ymin, ymax])
 
 #Plot of sSFR in Bulge
 ax=axs[2]
-ax.scatter(log_mhalo, sSFRBulge )
-ax.set_title("sSfrBulge vs Mhalo")
-ax.set_xlabel("Mhalo")
-ax.set_ylabel("sSfrBulge")
+ax.scatter(log_mhalo, sSFRBulge[class_ok], s=1 )
+ax.set_title("sSFR Bulge vs Halo Mass")
+ax.set_xlabel("Halo Mass (log(M/$h^-1$ Msun))")
+ax.set_ylabel("sSFR Bulge ($yr^-1$)")
 ymin=min(sSFRBulge)
-ymax=max(sSFRBulge)
+ymax=60#max(sSFRBulge)
 ax.axis([xmin, xmax, ymin, ymax])
 '''
 ###############################################################################
@@ -218,7 +260,9 @@ ax.axis([xmin, xmax, ymin, ymax])
 
 #Set up subplots
 fig, axs = plt.subplots(ncols=3, sharey=True)
-ax = axs[0]
+#ax = axs[0]
+#hb = ax.hexbin(f_half[class_ok], sSFR[class_ok], gridsize=40, bins='log', cmap='inferno')
+#ax.set_title("sSFR vs f 1/2")
 xmin=min(f_half)
 xmax=max(f_half)
 ymin=min(sSFR)
@@ -226,17 +270,17 @@ ymax=max(sSFR)
 
 #Plot of sSFR
 ax=axs[0]
-ax.scatter(f_half, sSFR )
+ax.scatter(f_half[class_ok], sSFR[class_ok], s=1 )
 ax.set_title("sSFR vs f 1/2")
-ax.set_xlabel("f 1/2")
+ax.set_xlabel("f 1/2 (Gyr)")
 ax.set_ylabel("sSFR")
 ax.axis([xmin, xmax, ymin, ymax])
 
 #Plot of sSFR in Disk
 ax=axs[1]
-ax.scatter(f_half, sSFRDisk )
+ax.scatter(f_half[class_ok], sSFRDisk[class_ok], s=1 )
 ax.set_title("sSfrDisk vs f 1/2")
-ax.set_xlabel("f 1/2")
+ax.set_xlabel("f 1/2 (Gyr)")
 ax.set_ylabel("sSfrDisk")
 ymin=min(sSFRDisk)
 ymax=max(sSFRDisk)
@@ -244,9 +288,9 @@ ax.axis([xmin, xmax, ymin, ymax])
 
 #Plot of sSFR in Bulge
 ax=axs[2]
-ax.scatter(f_half, sSFRBulge )
+ax.scatter(f_half[class_ok], sSFRBulge[class_ok], s=1 )
 ax.set_title("sSfrBulge vs f 1/2")
-ax.set_xlabel("f 1/2")
+ax.set_xlabel("f 1/2 (Gyr)")
 ax.set_ylabel("sSfrBulge")
 ymin=min(sSFRBulge)
 ymax=max(sSFRBulge)
@@ -261,4 +305,3 @@ ax.axis([xmin, xmax, ymin, ymax])
 #rs=spearmanr(log_mhalo, SFR)            # rs=0.42876820663520371
 #rs=spearmanr(log_mhalo, sSFR)           # rs=0.12956006509877613
 #print(rs)
-#Add in theta as a feature
