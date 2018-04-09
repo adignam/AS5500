@@ -7,6 +7,7 @@ from scipy.optimize import curve_fit
 #Load data for variables from text files
 mhalo=np.loadtxt('mhalo.txt') /0.7                  #10^10 Mo/h
 mstar=np.loadtxt('mstar.txt') /0.7                  #10^10 Mo/h
+'''
 f_half=np.loadtxt('t50.txt')/1000.                  #f1/2
 red_half=np.loadtxt('red_half.txt')                 #Lookback time
 StellarMass=np.loadtxt('StellarMass.txt')
@@ -20,10 +21,10 @@ SFR=SfrDisk+SfrBulge
 sSFR=np.zeros(19956)
 sSFRDisk=np.zeros(19956)
 sSFRBulge=np.zeros(19956)
-
+'''
 #Create condition that stellar mass must be greater than 0.1 solar masses
 class_ok = np.where((mstar > 0.1))
-
+'''
 #Populate sSFR arrays
 for i in range(0,(len(StellarMass[class_ok])-1)):
     if StellarMass[i] > 0:
@@ -31,14 +32,116 @@ for i in range(0,(len(StellarMass[class_ok])-1)):
         sSFRDisk[i]=SfrDisk[i]/StellarMass[class_ok][i]
         sSFRBulge[i]=SfrBulge[i]/StellarMass[class_ok][i]
     i=i+1
+'''
 ###############################################################################
+
+ms_mh = ((mstar[class_ok]/mhalo[class_ok]))
 
 #Log of halo mass
 log_halo=np.log10(mhalo)+10.
 log_mhalo=np.log10(mhalo[class_ok])+10.
 
-###############################################################################
+bins=10
+mass_bin = np.linspace(min(log_mhalo),max(log_mhalo), bins)
+m1=[]
+m2=[]
+m3=[]
+m4=[]
+x=mass_bin[0:(len(mass_bin)-1)]
+y1=[]
+y2=[]
+y3=[]
+y4=[]
+y5=[]
+y6=[]
+y7=[]
+y8=[]
+y9=[]
+temp_y=np.zeros((1000))
 
+for i in range (0,len(log_mhalo)):
+    for j in range (0,len(mass_bin)):
+        j=0
+        if log_mhalo[i]>mass_bin[j] and log_mhalo[i]<mass_bin[j+1]:
+            #m1.append(log_mhalo[i])
+            y1.append(ms_mh[i])
+            #temp_y[j]=ms_mh[i]
+            #print(np.append(temp_y,ms_mh[i]))
+        j=j+1
+        if log_mhalo[i]>mass_bin[j] and log_mhalo[i]<mass_bin[j+1]:
+            #m2.append(log_mhalo[i]) 
+            y2.append(ms_mh[i])
+        j=j+1
+        if log_mhalo[i]>mass_bin[j] and log_mhalo[i]<mass_bin[j+1]:
+            #m3.append(log_mhalo[i])    
+            y3.append(ms_mh[i])
+        j=j+1
+        if log_mhalo[i]>mass_bin[j] and log_mhalo[i]<mass_bin[j+1]:
+            #m4.append(log_mhalo[i])    
+            y4.append(ms_mh[i])        
+        j=j+1
+        if log_mhalo[i]>mass_bin[j] and log_mhalo[i]<mass_bin[j+1]:
+            #m4.append(log_mhalo[i])    
+            y5.append(ms_mh[i])        
+        j=j+1
+        if log_mhalo[i]>mass_bin[j] and log_mhalo[i]<mass_bin[j+1]:
+            #m4.append(log_mhalo[i])    
+            y6.append(ms_mh[i])        
+        j=j+1
+        if log_mhalo[i]>mass_bin[j] and log_mhalo[i]<mass_bin[j+1]:
+            #m4.append(log_mhalo[i])    
+            y7.append(ms_mh[i])        
+        j=j+1
+        if log_mhalo[i]>mass_bin[j] and log_mhalo[i]<mass_bin[j+1]:
+            #m4.append(log_mhalo[i])    
+            y8.append(ms_mh[i])        
+        j=j+1
+        if log_mhalo[i]>mass_bin[j] and log_mhalo[i]<mass_bin[j+1]:
+            #m4.append(log_mhalo[i])    
+            y9.append(ms_mh[i])
+
+y1mean=np.mean(y1)
+y2mean=np.mean(y2)
+y3mean=np.mean(y3)
+y4mean=np.mean(y4)
+y5mean=np.mean(y5)
+y6mean=np.mean(y6)
+y7mean=np.mean(y7)
+y8mean=np.mean(y8)
+y9mean=np.mean(y9)
+
+
+y=[]
+y.append(y1mean)
+y.append(y2mean)
+y.append(y3mean)
+y.append(y4mean)
+y.append(y5mean)
+y.append(y6mean)
+y.append(y7mean)
+y.append(y8mean)
+y.append(y9mean)
+
+plt.plot(x,y,'r')
+#Plot of Mstar/Mhalo vs Mhalo
+plt.scatter(log_mhalo,ms_mh,s=1 , label='Total Mass')
+plt.title("Mstar/Mhalo vs Halo Mass")
+plt.xlabel("Halo Mass (log(M/$h^-1$ Msun))")
+plt.ylabel("Mstar/Mhalo")
+plt.legend()
+###############################################################################
+'''#f half
+f_half=f_half[class_ok]
+
+age_bin = np.linspace(min(f_half),max(f_half), 30)
+mean=[]
+i=0
+while i < len(f_half):
+    mean.append(np.mean(f_half[i:i+100]))
+    i=i+100
+'''
+###############################################################################
+'''
 #Use data to create the mass-weighted age
 file=np.loadtxt('Millennium-output-times.dati')
 bins=file[:,0]
@@ -57,6 +160,7 @@ topsum=np.sum(top,axis=1)
 botsum=np.sum(bottom,axis=1)
 
 mwa=(topsum/botsum)/1e3
+'''
 ###############################################################################
 '''
 #T50: the time at which the central galaxy had formed 50% of its mass
@@ -106,16 +210,13 @@ plt.ylim(-1,10)
 ###############################################################################
 ###############################################################################
 
-#Plot of Mstar/Mhalo vs Mhalo
-plt.scatter(log_mhalo,((mstar[class_ok]/mhalo[class_ok])),s=1 )
-plt.title("Mstar/Mhalo vs Halo Mass")
-plt.xlabel("Halo Mass (log(M/$h^-1$ Msun))")
-plt.ylabel("Mstar/Mhalo")
-
 ###############################################################################
 '''
 #Plot of Mstar/Mhalo vs f 1/2
-plt.scatter(f_half[class_ok],((mstar[class_ok]/mhalo[class_ok])),s=1 )
+plt.scatter(f_half[0:(len(m1))],ms_mh[0:(len(m1))],s=1 )
+plt.scatter(f_half[0:(len(m2))],ms_mh[0:(len(m2))],s=1 )
+plt.scatter(f_half[0:(len(m3))],ms_mh[0:(len(m3))],s=1 )
+plt.scatter(f_half[0:(len(m4))],ms_mh[0:(len(m4))],s=1 )
 plt.title("Mstar/Mhalo vs f 1/2")
 plt.xlabel("f 1/2 (Gyr)")
 plt.ylabel("Mstar/Mhalo")
