@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import spearmanr
-from scipy.optimize import curve_fit
-
+#from scipy.stats import spearmanr
 
 #Load data for variables from text files
 mhalo=np.loadtxt('mhalo.txt') /0.7                  #10^10 Mo/h
